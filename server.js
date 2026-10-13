@@ -51,19 +51,33 @@ const MIME_TYPES = {
   '.mp4': 'video/mp4'
 };
 
+function findFile(reqPath) {
+  let safePath = (reqPath === '/' || !reqPath) ? 'index.html' : reqPath.replace(/^\/+/, '');
+  safePath = path.normalize(safePath).replace(/^(\.\.[\/\\])+/, '');
+  const candidates = [
+    path.join(__dirname, safePath),
+    path.join(process.cwd(), safePath),
+    path.resolve(safePath)
+  ];
+  for (const c of candidates) {
+    try {
+      if (fs.existsSync(c) && fs.statSync(c).isFile()) return c;
+    } catch (e) {}
+  }
+  return null;
+}
+
 function serveStatic(req, res, filePath) {
-  fs.stat(filePath, (err, stats) => {
-    if (err || !stats.isFile()) {
-      res.statusCode = 404;
-      res.setHeader('Content-Type', 'text/plain');
-      return res.end('404 Not Found');
-    }
-    const ext = path.extname(filePath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-    res.statusCode = 200;
-    res.setHeader('Content-Type', contentType);
-    fs.createReadStream(filePath).pipe(res);
-  });
+  if (!filePath) {
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'text/plain');
+    return res.end('404 Not Found');
+  }
+  const ext = path.extname(filePath).toLowerCase();
+  const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+  res.statusCode = 200;
+  res.setHeader('Content-Type', contentType);
+  fs.createReadStream(filePath).pipe(res);
 }
 
 const server = http.createServer(async (req, res) => {
@@ -82,21 +96,13 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Static files
-  let safePath = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
-  safePath = path.normalize(safePath).replace(/^(\.\.[\/\\])+/, '');
-  let absPath = path.join(__dirname, safePath);
-  if (!fs.existsSync(absPath)) {
-    const cwdPath = path.join(process.cwd(), safePath);
-    if (fs.existsSync(cwdPath)) absPath = cwdPath;
-  }
-
-  serveStatic(req, res, absPath);
+  const resolvedFile = findFile(pathname);
+  serveStatic(req, res, resolvedFile);
 });
 
 // 2. Built-in Background Monthly Report Scheduler (for persistent Node deployments)
 function checkScheduledMonthlyReport() {
   const d = new Date();
-  // On the 1st day of the month, verify if previous month's report was sent
   if (d.getUTCDate() === 1) {
     const prevMonth = getPreviousMonthKey();
     const stats = getVisitCount(prevMonth);
@@ -119,20 +125,20 @@ function checkScheduledMonthlyReport() {
   }
 }
 
-// Check every 6 hours
-setInterval(checkScheduledMonthlyReport, 6 * 60 * 60 * 1000);
-
-server.listen(PORT, () => {
-  console.log(`\n======================================================`);
-  console.log(`🚀 Akhil Marepalli Space Portfolio Server`);
-  console.log(`🌌 Local URL: http://localhost:${PORT}`);
-  console.log(`🛰️  API Endpoints:`);
-  console.log(`   - GET/POST /api/visitors`);
-  console.log(`   - POST     /api/contact`);
-  console.log(`   - GET/POST /api/monthly-report`);
-  console.log(`======================================================\n`);
-  // Run an immediate check upon startup
-  checkScheduledMonthlyReport();
-});
+// In local mode, start HTTP listener and periodic timer; on Vercel export the server handler
+if (require.main === module && !process.env.VERCEL) {
+  setInterval(checkScheduledMonthlyReport, 6 * 60 * 60 * 1000);
+  server.listen(PORT, () => {
+    console.log(`\n======================================================`);
+    console.log(`🚀 Akhil Marepalli Space Portfolio Server`);
+    console.log(`🌌 Local URL: http://localhost:${PORT}`);
+    console.log(`🛰️  API Endpoints:`);
+    console.log(`   - GET/POST /api/visitors`);
+    console.log(`   - POST     /api/contact`);
+    console.log(`   - GET/POST /api/monthly-report`);
+    console.log(`======================================================\n`);
+    checkScheduledMonthlyReport();
+  });
+}
 
 module.exports = server;
