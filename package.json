@@ -3,8 +3,8 @@
   "version": "1.1.0",
   "description": "Interactive 3D solar system portfolio with visitor analytics and secure email contact integration",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
+    "start": "node local-server.js",
+    "dev": "node local-server.js",
     "test": "node test-suite.js"
   },
   "keywords": [

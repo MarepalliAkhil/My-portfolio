@@ -1,9 +1,7 @@
 {
+  "cleanUrls": true,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/textures/(.*)", "destination": "/textures/$1" },
-    { "source": "/resume.pdf", "destination": "/resume.pdf" },
-    { "source": "/((?!api/|textures/|resume.pdf).*)", "destination": "/index.html" }
+    { "source": "/api/(.*)", "destination": "/api/$1" }
   ],
   "crons": [
     {
