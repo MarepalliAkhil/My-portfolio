@@ -1,0 +1,25 @@
+{
+  "name": "akhil-marepalli-portfolio",
+  "version": "1.1.0",
+  "description": "Interactive 3D solar system portfolio with visitor analytics and secure email contact integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node test-suite.js"
+  },
+  "keywords": [
+    "portfolio",
+    "threejs",
+    "space",
+    "analytics"
+  ],
+  "author": "Akhil Marepalli",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "nodemailer": "^10.1.0"
+  }
+}
