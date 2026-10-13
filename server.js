@@ -84,7 +84,11 @@ const server = http.createServer(async (req, res) => {
   // Static files
   let safePath = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
   safePath = path.normalize(safePath).replace(/^(\.\.[\/\\])+/, '');
-  const absPath = path.join(__dirname, safePath);
+  let absPath = path.join(__dirname, safePath);
+  if (!fs.existsSync(absPath)) {
+    const cwdPath = path.join(process.cwd(), safePath);
+    if (fs.existsSync(cwdPath)) absPath = cwdPath;
+  }
 
   serveStatic(req, res, absPath);
 });
@@ -130,3 +134,5 @@ server.listen(PORT, () => {
   // Run an immediate check upon startup
   checkScheduledMonthlyReport();
 });
+
+module.exports = server;
